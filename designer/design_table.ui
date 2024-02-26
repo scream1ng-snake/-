@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: #0D0D0E;</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="styleSheet">
+           <string notr="true">color: white;
+font-size: 16px;</string>
+          </property>
+          <property name="text">
+           <string>Идёт распознвание...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="progressBar">
+          <property name="styleSheet">
+           <string notr="true">QProgressBar {
+border: 1px solid #303030;
+border-radius: 8px;
+}
+
+QProgressBar::chunk {
+border-radius: 8px;
+background-color: #00AC4F;
+}</string>
+          </property>
+          <property name="value">
+           <number>0</number>
+          </property>
+          <property name="textVisible">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton">
+          <property name="styleSheet">
+           <string notr="true">background-color: #00AC4F;
+border: 1px solid #00AC4F;
+border-radius: 8px;
+font-size: 14px;
+color: white;
+padding: 5px 10px;</string>
+          </property>
+          <property name="text">
+           <string>СТАРТ</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="styleSheet">
+           <string notr="true">background-color: #EB3223;
+border: 1px solid #EB3223;
+border-radius: 8px;
+font-size: 14px;
+color: white;
+padding: 5px 10px;</string>
+          </property>
+          <property name="text">
+           <string>СТОП</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget">
+        <property name="styleSheet">
+         <string notr="true">QTableView {
+background-color: rgba(255, 255, 255, 30); 
+border: 1px solid rgba(255,255,255,40);
+border-bottom-right-radius: 7px; 
+border-bottom-left-radius: 7px; 
+color: white;
+}
+
+QHeaderView::section {
+background-color: rgb(53, 53, 53);
+color: white;
+border: none;
+height: 50px;
+font-size: 16pt;
+}
+
+QTableView::item {
+    border-style: none;
+    border-bottom: 1px solid rgba(255,255,255,50);
+    padding-left: auto;
+    padding-right: auto;
+}
+
+QTableView::item:selected{
+	border: none;
+	color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 50);
+}</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
