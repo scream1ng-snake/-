@@ -21,15 +21,15 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QHBoxLayout" name="MenuBox">
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="progressBarLabel">
           <property name="styleSheet">
            <string notr="true">color: white;
 font-size: 16px;</string>
           </property>
           <property name="text">
-           <string>Идёт распознвание...</string>
+           <string>Готовы к запуску</string>
           </property>
          </widget>
         </item>
@@ -55,14 +55,27 @@ background-color: #00AC4F;
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="startButton">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="styleSheet">
-           <string notr="true">background-color: #00AC4F;
+           <string notr="true">QPushButton:enabled {
+background-color: #00AC4F;
 border: 1px solid #00AC4F;
 border-radius: 8px;
 font-size: 14px;
 color: white;
-padding: 5px 10px;</string>
+padding: 5px 10px;
+}
+QPushButton:disabled {
+background-color: rgba(0, 172, 79, 0.3);
+border: 1px solid rgba(0, 172, 79, 0.3);
+border-radius: 8px;
+font-size: 14px;
+color: rgba(255, 255, 255, 0.5);
+padding: 5px 10px;
+}</string>
           </property>
           <property name="text">
            <string>СТАРТ</string>
@@ -70,14 +83,27 @@ padding: 5px 10px;</string>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_2">
+         <widget class="QPushButton" name="stopButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="styleSheet">
-           <string notr="true">background-color: #EB3223;
+           <string notr="true">QPushButton:enabled {
+background-color: #EB3223;
 border: 1px solid #EB3223;
 border-radius: 8px;
 font-size: 14px;
 color: white;
-padding: 5px 10px;</string>
+padding: 5px 10px;
+}
+QPushButton:disabled {
+background-color: rgba(235, 50, 35, 0.3);
+border: 1px solid rgba(235, 50, 35, 0.3);
+border-radius: 8px;
+font-size: 14px;
+color: rgba(255, 255, 255, 0.5);
+padding: 5px 10px;
+}</string>
           </property>
           <property name="text">
            <string>СТОП</string>
@@ -87,9 +113,11 @@ padding: 5px 10px;</string>
        </layout>
       </item>
       <item>
-       <widget class="QTableWidget" name="tableWidget">
-        <property name="styleSheet">
-         <string notr="true">QTableView {
+       <layout class="QHBoxLayout" name="tableBox">
+        <item>
+         <widget class="QTableWidget" name="tableWidget">
+          <property name="styleSheet">
+           <string notr="true">QTableView {
 background-color: rgba(255, 255, 255, 30); 
 border: 1px solid rgba(255,255,255,40);
 border-bottom-right-radius: 7px; 
@@ -108,8 +136,6 @@ font-size: 16pt;
 QTableView::item {
     border-style: none;
     border-bottom: 1px solid rgba(255,255,255,50);
-    padding-left: auto;
-    padding-right: auto;
 }
 
 QTableView::item:selected{
@@ -117,8 +143,22 @@ QTableView::item:selected{
 	color: rgb(255, 255, 255);
     background-color: rgba(255, 255, 255, 50);
 }</string>
-        </property>
-       </widget>
+          </property>
+          <property name="verticalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="showGrid">
+           <bool>false</bool>
+          </property>
+          <attribute name="horizontalHeaderDefaultSectionSize">
+           <number>200</number>
+          </attribute>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
