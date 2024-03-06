@@ -5,7 +5,8 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QTableWidgetItem, QHeade
 from os import path, listdir
 from enum import Enum
 from fnmatch import fnmatch
-from utils import WsClient
+import os
+import base64
 
 class ProgramStates(Enum):
     Initail = "Initail"
@@ -23,10 +24,40 @@ class WsCommands():
     CONNECT = 'CONNECT'
     START = 'START'
     STOP = 'STOP'
+    POST_FILES = "POST_FILES"
+
+class FileStates():
+    # файл ожиадет в очереди
+    WAITING = 'WAITING'
+    # файл полностью распознан
+    RECOGNIZED = 'RECOGNIZED'
+    # файл распозанется
+    RECOGNIZING = 'RECOGNIZING'
+    # файл на верификации
+    ON_VERIFICATION = 'ON_VERIFICATION'
+    # ошибка при распознавании
+    FAILED = 'FAILED'
+
+FileStatesPhrases = {
+    # файл ожиадет в очереди
+    FileStates.WAITING: "В очереди",
+    # файл полностью распознан
+    FileStates.RECOGNIZED: "Распознан",
+    # файл распозанется
+    FileStates.RECOGNIZING: "Распознается",
+    # файл на верификации
+    FileStates.ON_VERIFICATION: "Верификация",
+    # ошибка при распознавании
+    FileStates.FAILED: "Ошибка",
+}
 
 # логика
 class RunningWindowLogic:
     state = ProgramStates.Initail
+
+    filesTableModel = []
+
+
     def setState(self, state:ProgramStates):
         self.state = state
 
@@ -39,7 +70,8 @@ class RunningWindowLogic:
             self.ui.stopButton.setEnabled(True)
             self.ui.progressBarLabel.setText(StatesLabels.Running)
             msgObj = {
-                "type": WsCommands.START
+                "type": WsCommands.START,
+                "clientID": self.parrent.clientID
             }
             self.parrent.ws.sendMessage(msgObj)
         elif(state == ProgramStates.Stoped):
@@ -47,7 +79,8 @@ class RunningWindowLogic:
             self.ui.stopButton.setDisabled(True)
             self.ui.progressBarLabel.setText(StatesLabels.Stoped)
             msgObj = {
-                "type": WsCommands.STOP
+                "type": WsCommands.STOP,
+                "clientID": self.parrent.clientID
             }
             self.parrent.ws.sendMessage(msgObj)
         elif(state == ProgramStates.Completed):
@@ -69,8 +102,53 @@ class RunningWindowLogic:
 
         self.ui.startButton.clicked.connect(lambda: self.setState(ProgramStates.Running))
         self.ui.stopButton.clicked.connect(lambda: self.setState(ProgramStates.Stoped))
+        # подписали свой редюсер к экземпляру веб сокета
+        self.parrent.ws.subscribeToMessage(self.onWsMessage)
+        
         self.renderTable()
 
+    def onWsMessage(self, msgObj):
+        if msgObj["type"] == 'GET_FILES':
+            # папка
+            folder = self.parrent.settings.value(self.parrent.SETTINGS_PATH, '', type=str)
+            # первые N файлов которые со статусом "В очереди"
+            waitingFiles = []
+            for fileRow in self.filesTableModel:
+                if len(waitingFiles) < msgObj["count"]:
+                    if fileRow[1] == FileStates.WAITING:
+                        filename = fileRow[0]
+                        fullpath = os.path.join(folder, filename).replace("\\","/")
+                        print("reading - ", fullpath)
+                        content = open(fullpath, mode="rb").read()
+                        encoded_b64 = base64.b64encode(content)
+                        waitingFiles.append({
+                            "filename": filename,
+                            "content": encoded_b64.decode('utf-8')
+                        })
+                        
+                else:
+                    break
+            # затем эти файлы отправляем на сервер
+            self.parrent.ws.sendMessage({
+                "type": WsCommands.POST_FILES,
+                "clientID": self.parrent.clientID,
+                "files": waitingFiles
+            })
+                
+        elif msgObj["type"] == 'SET_FILE_STATE':
+            filename = msgObj["filename"]
+            state = msgObj["state"]
+            self.updateFileInTable(filename, state)
+
+    def updateFileInTable(self, filename:str, state:str):
+        results = [(i, fr) for i, fr in enumerate(self.filesTableModel) if fr[0] == filename]
+        rowIndex = results[0][0]
+        if rowIndex != None:
+            self.filesTableModel[rowIndex] = [filename, state]
+            self.renderTable()
+            
+            
+    
     def renderTable(self):
         self.ui.tableWidget.setRowCount(len(self.parrent.files))
         self.ui.tableWidget.setColumnCount(len(self.tableHeader))
@@ -79,13 +157,32 @@ class RunningWindowLogic:
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.Stretch)
-        for i, file in enumerate(self.parrent.files):
-            filename = QTableWidgetItem(file)
-            status = QTableWidgetItem("В очереди")
-            more = QTableWidgetItem("...")
-            self.ui.tableWidget.setItem(i, 0, filename)
-            self.ui.tableWidget.setItem(i, 1, status)
-            self.ui.tableWidget.setItem(i, 2, more)
+
+        # если модель таблицы пустая
+        if not len(self.filesTableModel):
+            # то сначала собираем модель таблицы
+            for i, file in enumerate(self.parrent.files):
+                self.filesTableModel.append([file, FileStates.WAITING])
+            
+            # а уже потом саму таблицу обновляем по модели
+            for i, fileRow in enumerate(self.filesTableModel):
+                filename = QTableWidgetItem(fileRow[0])
+                status = QTableWidgetItem(FileStatesPhrases[fileRow[1]])
+                more = QTableWidgetItem("...")
+                self.ui.tableWidget.setItem(i, 0, filename)
+                self.ui.tableWidget.setItem(i, 1, status)
+                self.ui.tableWidget.setItem(i, 2, more)
+
+        else:
+            for i, fileRow in enumerate(self.filesTableModel):
+                filename = QTableWidgetItem(fileRow[0])
+                status = QTableWidgetItem(FileStatesPhrases[fileRow[1]])
+                more = QTableWidgetItem("...")
+                self.ui.tableWidget.setItem(i, 0, filename)
+                self.ui.tableWidget.setItem(i, 1, status)
+                self.ui.tableWidget.setItem(i, 2, more)
+
+        
 
 
 # логика

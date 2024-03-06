@@ -3,7 +3,7 @@ from PySide6 import QtCore
 from PySide6.QtWebSockets import QWebSocketProtocol, QWebSocket
 from PySide6.QtCore import QUrl
 from PySide6.QtNetwork import QAbstractSocket
-from json import dumps
+from json import dumps, loads
 
 
 def isUUID(val):
@@ -33,7 +33,7 @@ class WsClient(QtCore.QObject):
                 self.client.pong.connect(self.onPong)
                 self.client.connected.connect(self.onConnected)
                 self.client.disconnected.connect(lambda: print('disconnected'))
-                self.client.textMessageReceived.connect(lambda msg: print(msg))
+                self.client.textMessageReceived.connect(self.onMessage)
                 self.client.open(QUrl(self.host))
             
         except Exception as e:
@@ -41,7 +41,7 @@ class WsClient(QtCore.QObject):
             print('qqqqqqqqqqq')
 
     def sendMessage(self, obj):
-        print("client: send_message")
+        # print("[client]: send_message - ", dumps(obj))
         self.client.sendTextMessage(dumps(obj))
 
     def onPong(self, elapsedTime, payload):
@@ -49,15 +49,34 @@ class WsClient(QtCore.QObject):
 
 
     def error(self, error_code):
-        print('Somthing wents wrong')
-        print("error code: {}".format(error_code))
-        print(self.client.errorString())
+        print("[client]: error_code: {}".format(error_code))
+        print("[client]: error_text: ", self.client.errorString())
 
     def close(self):
+        print('[client]: closed')
         self.client.close()
 
     def onConnected(self):
-        print('connected')
+        print('[client]: connected')
+
+
+    # тут будут обработчики входящих сообщений
+    subscriptions = []
+    
+    # с помощью этого метода мы добавляем свой редюсер 
+    # в массив обработчиков сообщений
+    def subscribeToMessage(self, handler):
+        if handler in self.subscriptions:
+            pass
+        else:
+            self.subscriptions.append(handler)
+    
+    def onMessage(self, msg: str):
+        print('[client]: recieve_message - ', msg)
+        msgObj = loads(msg)
+        # а тут мы проходим циклом по всем редюсерам
+        for subscription in self.subscriptions:
+            subscription(msgObj)
 
     def isConnected(self):
         return self.client.state() == QAbstractSocket.SocketState.ConnectedState

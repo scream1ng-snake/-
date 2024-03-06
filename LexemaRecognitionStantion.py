@@ -1,27 +1,12 @@
 import os
 import sys
-from PySide6.QtCore import QSettings, QAbstractTableModel, Qt
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from Routes import Routes
 from Windows import BeginWindowLogic, RunningWindowLogic
 from uuid import uuid4
 from utils import isUUID, WsClient
 
-
-class TableModel(QAbstractTableModel):
-    def __init__(self, data):
-        super(TableModel, self).__init__()
-        self._data = data
-
-    def data(self, index, role):
-        if role == Qt.ItemDataRole.DisplayRole:
-            return self._data[index.row()][index.column()]
-
-    def rowCount(self, index):
-        return len(self._data)
-
-    def columnCount(self, index):
-        return len(self._data[0])
 
 
 class LexemaRecognitionStantion(QMainWindow):
@@ -53,16 +38,20 @@ class LexemaRecognitionStantion(QMainWindow):
         super(LexemaRecognitionStantion, self).__init__()
         self.settings = QSettings('app', 'app', self)
         self.checkMyClientID()
-        for route in self.routes:
-            self.routes[route].setupUi(self)
 
+        # настраиваем веб сокет
         self.ws = WsClient(self, 'ws://localhost:3000')
 
         def onWsError():
             self.navigateTo(Routes.Begin)
             self.showError('Соединения потеряно')
-        
+        # коннектим веб сокет
         self.ws.connect(onReject=onWsError)
+
+        # рендерим роуты в приложении
+        for route in self.routes:
+            self.routes[route].setupUi(self)
+        
 
     # простая авторизация чтобы хоть как-то понимать кто есть кто
     def checkMyClientID(self): 
